@@ -1,0 +1,42 @@
+{
+  "task_id": "v0.90.1-container-patch",
+  "status": "DONE",
+  "timestamp": "2026-11-01T00:05:00+08:00",
+  "why": "v0.90.0 的 tag 打在最后一个容器修复之前，已发布的 ghcr 镜像在 Linux 上 clawd serve 会因 /app 属主不对而 PermissionError 退出；按不 force push 规则补 patch 版本",
+  "commits": [
+    "6385e39 fix(ops): 健康检查三处恒真 + 容器镜像跑不起来（4 个只有真部署才暴露的缺陷）",
+    "e8a20ee feat(ops): X-8/X-10/X-9/X-3/X-6 —— 错误字典/存储体检/状态迁移/轨迹回放/启动预算 + CLI 接线",
+    "7d7d881 feat(release): X-12 发布流水线 + 打包契约 + X-11 桌面端交互四态",
+    "42264a2 docs: v0.90.0 收口（版本号/CHANGELOG/基线/台账/证据）  ← tag v0.90.0",
+    "fc79f45 style: pre-commit 收口（isort + 行尾）",
+    "b6e5f21 style: docs/MAINTENANCE.md 结尾多余空行",
+    "6659ca5 test(brain): 修 world_model 并行用例的跨用例污染（CI 3.10 唯一红项）",
+    "84e4c93 fix(ops): 容器端口文件 PermissionError 把 Host 带走（第 5 个部署缺陷）",
+    "75b8cdc docs: 补记第 5 个部署缺陷",
+    "e38f9cc release: v0.90.1 —— 容器镜像补丁  ← tag v0.90.1"
+  ],
+  "github_runs": {
+    "ci_pipeline_75b8cdc": {"id": 41208642366, "conclusion": "success", "jobs": "Security Scan / Lint & Type Check(含启动预算门禁) / Test 3.10·3.11·3.12 / Docker Build Test(真探活)"},
+    "ci_pipeline_e38f9cc": {"id": 41214374407, "conclusion": "success", "jobs": "同上，6/6 success"},
+    "quality_checks_e38f9cc": {"id": 41214374473, "conclusion": "success"},
+    "release_v0_90_1": {"id": 41214379823, "conclusion": "success", "url": "https://github.com/lza6/clawd-code/releases/tag/v0.90.1", "assets": ["clawd_code-0.90.1-py3-none-any.whl", "clawd_code-0.90.1.tar.gz"]},
+    "docker_image_v0_90_1": {"id": 41214379944, "conclusion": "success", "note": "ghcr 镜像重建并推送（含 /app chown 与端口文件容错）"},
+    "validate_plugin_e38f9cc": {"id": 41214379989, "conclusion": "success"}
+  },
+  "container_probe_evidence_ci": {
+    "cmd": "docker run -d --name clawd-smoke -p 18765:8765 clawd-code:ci-test && curl /healthz /readyz",
+    "raw_output_tail": "Clawd Code v0.90.0 · /healthz {\"status\":\"ok\",\"version\":\"0.90.0\",\"uptime_s\":0.927} · /readyz {\"status\":\"ready\",\"checks\":[data_dir_writable ok, llm_configured provider/model 已配置]} · docker inspect Health.Status=healthy"
+  },
+  "local_verification": {
+    "full_suite": "5736 passed / 9 skipped / 7 xfailed / 9 deselected / 0 failed（827.84s）",
+    "coverage": "66.86%（fail_under=60）",
+    "collect": "5761 / 0 errors",
+    "gates": "ruff F821/F811/E9 0 · IMPORT-FAIL 0 · 可达 507 · 静默 154 · core_surface PASS · 审计台账 28/28 · 假成功 0 · MCP 4/4 · doc_drift 全一致 · isort 通过",
+    "container": "docker build clawd-code:v0.90.0-ci → server listening on 0.0.0.0:8765 · 端口文件 /app/.clawd_host_port 写入成功 · /healthz 200 · /readyz 200 · /api/nope 404 · health=healthy"
+  },
+  "limitations": [
+    "v0.90.0 的 tag 保留不动（不改已发布历史）；其 ghcr 镜像在 Linux 上不可用，以 v0.90.1 为准",
+    "正式 CA 代码签名仍缺（自签名 Status=UnknownError 属预期）",
+    "真实生产环境部署未做（无部署目标与凭证）—— 容器验证为本机 + GitHub runner 两处真实演练"
+  ]
+}
