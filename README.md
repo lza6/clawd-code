@@ -476,15 +476,15 @@ export CLAWD_VERIFY_COMMAND="python -m pytest tests/ -q"
 「属性名漂移」类缺陷。v0.51.0 修复的 11 个阻塞问题中，有 5 个只有在把
 真实请求完整打通时才会逐层暴露。
 
-### 质量基线（2026-10-31 v0.90.0 实测；每轮只更新**本轮真的跑过**的项）
+### 质量基线（2026-10-31 v0.90.0/v0.90.1 实测；每轮只更新**本轮真的跑过**的项）
 
 | 指标 | 当前 | 说明 |
 |:---|:---|:---|
-| 测试用例 | **5734 passed / 9 skipped / 7 xfailed / 0 failed**（2026-10-31 v0.90.0 实测，456.41s） | `py -3.10 -m pytest tests/ -q -m "not slow"` |
-| 快速层（不含 slow） | **5734 passed / 0 failed / 7 分 36 秒**（同一命令，v0.90.0 实测） | `py -3.10 -m pytest tests/ -q -m "not slow"` |
-| 用例收集 | **5759 / 0 errors**（2026-10-31 v0.90.0 实测） | `py -3.10 -m pytest tests/ --collect-only -q` |
+| 测试用例 | **5736 passed / 9 skipped / 7 xfailed / 0 failed**（2026-10-31 v0.90.1 实测，827.84s） | `py -3.10 -m pytest tests/ -q -m "not slow"` |
+| 快速层（不含 slow） | **5736 passed / 0 failed / 13 分 47 秒**（含 13 个 Python 版本外因素，v0.90.1 实测带覆盖率） | `py -3.10 -m pytest tests/ -q -m "not slow"` |
+| 用例收集 | **5761 / 0 errors**（2026-10-31 v0.90.1 实测） | `py -3.10 -m pytest tests/ --collect-only -q` |
 | 契约测试 | **39 passed**（本轮实测） | `py -3.10 -m pytest tests/contracts -q` |
-| 覆盖率 | **66.76%**（2026-10-31 v0.90.0 实测，`fail_under=60` 已生效） | `py -3.10 -m pytest tests/ -q --cov=src` |
+| 覆盖率 | **66.86%**（2026-10-31 v0.90.1 实测，`fail_under=60` 已生效） | `py -3.10 -m pytest tests/ -q --cov=src` |
 | 覆盖率门禁 | `fail_under = 60`（**已生效**，2026-10-29 由 47 收紧） | 见 `pyproject.toml` 注释 |
 | Ruff `F821` / `F811` | **0 / 0** | `py -3.10 -m ruff check src/ tests/ --select F821,F811,E9` |
 | 导入期缺陷 | **IMPORT-FAIL 0 / IMPORT-EXIT 0**（624 模块，624 OK，DEP-MISSING 0；2026-10-29 实测） | `scripts/import_sweep.py --strict-exit` |

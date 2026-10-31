@@ -2,6 +2,25 @@
 
 > 状态: **v0.90.0 剩余高阶提案落地 + 三处「假健康检查」修复 + 容器部署真验证**（2026-10-31）：X-3 轨迹回放 / X-6 启动预算 / X-8 中文错误字典（53 码）/ X-9 状态迁移 / X-10 doctor --deep / X-11 桌面四态 / X-12 发布流水线 全部落地；健康检查三处恒真、镜像无源码、依赖漏装、服务绑 loopback 四个「只有真部署才暴露」的缺陷修复。全量非 slow **5734 passed / 0 failed** · 收集 **5759 / 0 errors** · 覆盖率 **66.76%** · 静默 154 · 可达 507 · 启动预算 4/4 在界内 · 真实 E2E e2e_smoke 5/5 · 装机 E2E 0 失败 · 容器 /healthz /readyz 200 + 蓝绿热更新演练通过
 
+## 2026-10-31 v0.90.1 —— 容器镜像补丁（v0.90.0 的 tag 早于最后一个容器修复）
+
+**为什么有这个 patch**：v0.90.0 的 tag 打在 Dockerfile `chown -R 1000:1000 /app` 修复**之前**，
+所以已发布的 `ghcr.io/lza6/clawd-code:v0.90.0` 镜像在 Linux 上 `clawd serve` 会因
+`PermissionError: [Errno 13] /app/.clawd_host_port` 直接退出（`/healthz` 000）。
+按"不 force push、不改已发布历史"的规则不移动 tag，补 patch 版本。
+
+**GitHub 真机 CI 结果（commit 75b8cdc，v0.90.1 发布前）**
+- **CI Pipeline：整条 success** —— Security Scan / Lint & Type Check（含新加的启动预算门禁）/
+  Test 3.10 / 3.11 / 3.12 / **Docker Build Test（真探活，已去掉 `|| true`）**
+- Docker job 实测输出：`Clawd Code v0.90.0` ·
+  `/healthz` `{"status":"ok","version":"0.90.0"}` · `/readyz` `{"status":"ready",...}` ·
+  `docker inspect Health.Status=healthy`
+- Quality Checks：success（pre-commit 全钩子 + 覆盖率门槛）
+
+> 本轮唯一一次"CI 红"的教训：3.10 上 `test_world_model_initialize_parallel` 因
+> 全局 patch `asyncio.to_thread` 被其他用例的索引任务污染而假红（"Called 21 times"），
+> 已改为断言「本用例的 `dependency_graph.build` 恰好经 `to_thread` 一次且 `parallel=True`」。
+
 ## 2026-10-31 v0.90.0 —— 剩余高阶提案全落地 + 四个「只有真部署才暴露」的缺陷
 
 > 承接 v0.89.1（CI Linux 矩阵清零）。本轮做《下一步改进指南》§7 里**还没完成**的高阶提案，

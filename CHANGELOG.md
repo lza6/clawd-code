@@ -7,6 +7,36 @@
 
 ---
 
+## [v0.90.1] (2026-10-31) — 容器镜像补丁：v0.90.0 的镜像在 Linux 上启动即崩
+
+**为什么发这个补丁**（不想粉饰）：v0.90.0 的 tag 打在最后一个容器修复**之前**，
+于是已发布的 `ghcr.io/lza6/clawd-code:v0.90.0` 镜像里仍然是"`/app` 属 root、进程 UID 1000"
+的版本 —— 在 Linux 上 `clawd serve` 写端口文件时 `PermissionError: [Errno 13]
+/app/.clawd_host_port` 冒到顶层，Host 直接退出，`/healthz` 000。
+本机 Docker Desktop 不复现该权限问题，所以只有 CI 的 Linux runner 把它照出来了。
+
+按"不 force push / 不改已发布历史"的规则，**不移动 v0.90.0 的 tag**，而是补 patch 版本。
+
+### 修正内容（v0.90.0 之后的 4 个提交）
+
+| 项 | 说明 |
+|---|---|
+| 容器权限 | `Dockerfile` 改 `chown -R 1000:1000 /app`（原先只 chown 了 `logs`/`.clawd`） |
+| 端口文件容错 | `run_host` 写端口文件失败降级为 `logger.warning`，服务继续提供 `/healthz` `/readyz`（端口文件只是"自动发现"的便利机制，不该把服务带走） |
+| 测试隔离 | `tests/brain/test_world_model_complex.py` 的并行用例改为断言「本用例的 `dependency_graph.build` 经 `to_thread` 恰好一次且 `parallel=True`」，不再数全局 `to_thread` 调用（全局 patch 会被其他用例的索引任务污染，CI 3.10 实测 "Called 21 times"） |
+| 风格 | isort 导入排序、文件结尾恰好一个换行（pre-commit 收口） |
+
+### 验证（GitHub 真机 CI，commit 75b8cdc 前身 / 本补丁发布前）
+
+- **CI Pipeline 整条 success**：Security Scan · Lint & Type Check（含新的启动预算门禁）
+  · Test 3.10 / 3.11 / 3.12 · **Docker Build Test（真探活）**
+- 容器探活实测输出：`Clawd Code v0.90.0` ·
+  `/healthz` `{"status":"ok","version":"0.90.0"}` · `/readyz` `{"status":"ready",...}` ·
+  `docker inspect Health.Status=healthy`
+- Quality Checks（pre-commit + 覆盖率门槛）success
+
+---
+
 ## [v0.90.0] (2026-10-31) — 剩余高阶提案落地：探针/错误字典/存储体检/状态迁移/轨迹回放/启动预算/发布流水线/交互四态
 
 承接 v0.89.1，本轮把《下一步改进指南》§7 里**还没落地**的高阶提案做完，并且先修掉三个
